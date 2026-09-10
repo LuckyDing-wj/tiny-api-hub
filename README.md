@@ -19,14 +19,18 @@
 - Tailwind CSS v4
 - chrome.storage.local + chrome.scripting
 
-## 本机使用
+## 安装
+
+1. 从 [Actions](https://github.com/LuckyDing-wj/tiny-api-hub/actions) 页面下载最新的 `tiny-api-hub-chrome` 产物
+2. 解压 zip
+3. Chrome → `chrome://extensions` → 开发者模式 → 加载已解压的扩展程序 → 选解压出来的文件夹
+
+## 本机开发
 
 ```bash
 pnpm install
 node node_modules/wxt/bin/wxt.mjs build
 ```
-
-Chrome → `chrome://extensions` → 开发者模式 → 加载 `D:\Code\projects\tiny-api-hub\.output\chrome-mv3`。
 
 开发时热重载：`node node_modules/wxt/bin/wxt.mjs`（不要用 `pnpm dev`，会撞 supply-chain 策略）。
 
