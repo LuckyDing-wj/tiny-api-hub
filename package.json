@@ -39,6 +39,9 @@
     "onlyBuiltDependencies": [
       "esbuild",
       "spawn-sync"
+    ],
+    "ignoredBuiltDependencies": [
+      "posthog-js"
     ]
   }
 }
