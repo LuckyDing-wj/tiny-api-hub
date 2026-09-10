@@ -3,7 +3,11 @@ name: Build Extension
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -32,3 +36,10 @@ jobs:
           name: tiny-api-hub-chrome
           path: tiny-api-hub-chrome.zip
           retention-days: 90
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: tiny-api-hub-chrome.zip
+          generate_release_notes: true
