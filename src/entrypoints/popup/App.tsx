@@ -2,6 +2,7 @@ import {
   Archive,
   CalendarCheck,
   Download,
+  ExternalLink,
   KeyRound,
   Plus,
   RefreshCw,
@@ -116,6 +117,26 @@ export default function App() {
     stopRef.current = true
   }
 
+  const handleOpenFailedSites = async () => {
+    const results = await loadCheckInResults()
+    const all = await loadAccounts()
+    const today = new Date().toDateString()
+    const failed = all.filter((a) => {
+      const r = results[a.id]
+      return (
+        r &&
+        !r.success &&
+        new Date(r.timestamp).toDateString() === today
+      )
+    })
+    for (const account of failed) {
+      void chrome.tabs.create({ url: account.baseUrl })
+    }
+    if (failed.length === 0) {
+      alert("今天没有签到失败的站点")
+    }
+  }
+
   // 全屏子视图
   if (view.kind === "keys") {
     return (
@@ -200,6 +221,15 @@ export default function App() {
                 <CalendarCheck size={15} />
               </button>
             )
+          )}
+          {nav === "accounts" && !checkinActive && (
+            <button
+              className="ta-btn ta-btn-icon"
+              onClick={() => void handleOpenFailedSites()}
+              title="打开今天签到失败的站点"
+            >
+              <ExternalLink size={15} />
+            </button>
           )}
           {(nav === "accounts" || nav === "credentials") && (
             <button
