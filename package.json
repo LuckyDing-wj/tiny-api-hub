@@ -2,7 +2,7 @@
   "name": "tiny-api-hub",
   "private": true,
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "中转账号 + API 凭据管家（精简新实现）",
   "engines": {
     "node": ">=20",
