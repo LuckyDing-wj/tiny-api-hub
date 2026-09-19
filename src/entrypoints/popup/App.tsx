@@ -18,6 +18,7 @@ import type { Account } from "~/types"
 
 import AccountList from "./AccountList"
 import AddAccountForm from "./AddAccountForm"
+import SkeletonRows from "./SkeletonRows"
 import BackupView from "./BackupView"
 import CredentialView from "./CredentialView"
 import ExportView from "./ExportView"
@@ -258,55 +259,51 @@ export default function App() {
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden px-3 pb-2">
         <div key={nav} className="ta-view flex min-h-0 flex-col gap-2">
           {nav === "accounts" ? (
-          <>
-            {importError && (
-              <p className="text-[11px] text-red-500 dark:text-red-400">{importError}</p>
-            )}
-            {adding && (
-              <AddAccountForm
-                onCreated={() => {
-                  setView({ kind: "main", nav: "accounts", adding: false })
-                  void reloading()
-                }}
-                onCancel={() => setView({ kind: "main", nav: "accounts", adding: false })}
-              />
-            )}
-            {loading ? (
-              <div className="flex flex-col gap-1.5">
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="ta-skeleton h-16" />
-                ))}
-              </div>
-            ) : (
-              <AccountList
-                accounts={accounts}
-                refreshingId={refreshingId}
-                refreshProgress={refreshProgress}
-                checkinProgress={checkinProgress}
-                checkinResults={checkinResults}
-                onRefresh={refreshOne}
-                onChanged={reloading}
-                onOpenKeys={(account) => setView({ kind: "keys", account })}
-                onOpenModels={(account) => setView({ kind: "models", account })}
-              />
-            )}
-          </>
-        ) : nav === "credentials" ? (
-          <CredentialView
-            onChanged={reloading}
-            onVerify={(baseUrl, apiKey, title) =>
-              setView({ kind: "verify", baseUrl, apiKey, title })
-            }
-            onExport={(name, baseUrl, apiKey, title) =>
-              setView({ kind: "export", name, baseUrl, apiKey, title })
-            }
-          />
-        ) : nav === "backup" ? (
-          <BackupView
-            onBack={() => backToMain("accounts")}
-            onImported={() => void reloading()}
-          />
-        ) : null}
+            <>
+              {importError && (
+                <p className="text-[11px] text-red-500 dark:text-red-400">{importError}</p>
+              )}
+              {adding && (
+                <AddAccountForm
+                  onCreated={() => {
+                    setView({ kind: "main", nav: "accounts", adding: false })
+                    void reloading()
+                  }}
+                  onCancel={() => setView({ kind: "main", nav: "accounts", adding: false })}
+                />
+              )}
+              {loading ? (
+                <SkeletonRows rowClassName="h-24" />
+              ) : (
+                <AccountList
+                  accounts={accounts}
+                  refreshingId={refreshingId}
+                  refreshProgress={refreshProgress}
+                  checkinProgress={checkinProgress}
+                  checkinResults={checkinResults}
+                  onRefresh={refreshOne}
+                  onChanged={reloading}
+                  onOpenKeys={(account) => setView({ kind: "keys", account })}
+                  onOpenModels={(account) => setView({ kind: "models", account })}
+                />
+              )}
+            </>
+          ) : nav === "credentials" ? (
+            <CredentialView
+              onChanged={reloading}
+              onVerify={(baseUrl, apiKey, title) =>
+                setView({ kind: "verify", baseUrl, apiKey, title })
+              }
+              onExport={(name, baseUrl, apiKey, title) =>
+                setView({ kind: "export", name, baseUrl, apiKey, title })
+              }
+            />
+          ) : nav === "backup" ? (
+            <BackupView
+              onBack={() => backToMain("accounts")}
+              onImported={() => void reloading()}
+            />
+          ) : null}
         </div>
       </div>
 

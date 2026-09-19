@@ -23,7 +23,8 @@ export const CONFIRM_ARMED_CLASS =
 export default function ConfirmButton({
   onConfirm,
   children,
-  confirmLabel = "确认删除？",
+  // 默认「确认」与常见 children（「删除」）等宽，叠放后常态宽度不变
+  confirmLabel = "确认",
   armedClassName = CONFIRM_ARMED_CLASS,
   className = "",
   title,

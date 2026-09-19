@@ -2,6 +2,7 @@ import { Activity, Copy, Download, KeyRound, Plus, Tag } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import ConfirmButton, { CONFIRM_ARMED_CLASS } from "./ConfirmButton"
+import SkeletonRows from "./SkeletonRows"
 
 import {
   copyKey,
@@ -210,11 +211,7 @@ export default function KeyView({ account, onBack, onVerify, onExport }: Props) 
       )}
 
       {loading ? (
-        <div className="flex flex-col gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="ta-skeleton h-16" />
-          ))}
-        </div>
+        <SkeletonRows rowClassName="h-28" />
       ) : tokens.length === 0 ? (
         <p className="py-6 text-center text-xs text-gray-500 dark:text-dark-text-tertiary">
           还没有 Token，点「新建」创建。

@@ -27,10 +27,6 @@ function formatBalance(account: Account): string {
   return `$${(account.balance ?? 0).toFixed(2)}`
 }
 
-function formatTime(ts: number | undefined): string {
-  return formatRelativeTime(ts)
-}
-
 export default function AccountList({
   accounts,
   refreshingId,
@@ -130,7 +126,7 @@ export default function AccountList({
             <span
               title={account.lastSyncTime ? new Date(account.lastSyncTime).toLocaleString() : undefined}
             >
-              {formatTime(account.lastSyncTime)}
+              {formatRelativeTime(account.lastSyncTime)}
             </span>
             <div className="flex items-center gap-2">
               {refreshProgress?.[account.id] === "running" && (

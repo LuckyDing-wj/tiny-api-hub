@@ -6,6 +6,8 @@ import { formatPriceCompact } from "~/services/modelPricing"
 import type { Account } from "~/types"
 import type { ModelInfo } from "~/services/models"
 
+import SkeletonRows from "./SkeletonRows"
+
 interface Props {
   account: Account
   onBack: () => void
@@ -71,11 +73,7 @@ export default function ModelView({ account, onBack }: Props) {
       )}
 
       {loading ? (
-        <div className="flex flex-col gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="ta-skeleton h-11" />
-          ))}
-        </div>
+        <SkeletonRows rowClassName="h-16" />
       ) : filtered.length === 0 ? (
         <p className="py-6 text-center text-xs text-gray-500 dark:text-dark-text-tertiary">
           无模型{filter ? "匹配筛选" : "，该账号未返回模型列表"}。

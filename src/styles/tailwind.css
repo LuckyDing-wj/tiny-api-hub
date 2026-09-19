@@ -22,27 +22,14 @@
     @apply bg-white text-gray-900 dark:bg-dark-bg-primary dark:text-dark-text-primary;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
-  /* 暗色滚动条（标准属性 + webkit 兜底） */
+  /* 暗色滚动条。只写标准属性：Chrome 121+ 生效，且标准值非 auto 时
+     webkit 伪元素按规范被禁用，写了也是死代码 */
   * {
     scrollbar-width: thin;
     scrollbar-color: #d1d5db transparent;
   }
   .dark * {
     scrollbar-color: #334155 transparent;
-  }
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    border-radius: 4px;
-    background: #d1d5db;
-  }
-  .dark ::-webkit-scrollbar-thumb {
-    background: #334155;
   }
 }
 
@@ -92,9 +79,6 @@
   .ta-view,
   .ta-skeleton {
     animation: none;
-  }
-  .spin {
-    animation-duration: 2s;
   }
 }
 
