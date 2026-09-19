@@ -7,7 +7,14 @@ import {
   readCurrentTabSession,
   refreshAuthBundleInTab,
 } from "~/services/currentTab"
-import { loadAccounts, nextOrder, patchAccount, removeAccount, saveAccounts, upsertAccount } from "~/services/storage"
+import {
+  assertNewApiSite,
+  getAccount,
+  loadAccounts,
+  nextOrder,
+  patchAccount,
+  upsertAccount,
+} from "~/services/storage"
 
 function genId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -23,9 +30,7 @@ function classifyHealth(error: unknown): HealthStatus {
 
 /** 验证并创建账号；失败抛错。 */
 export async function createAccount(input: AccountInput): Promise<Account> {
-  if (input.siteType !== "new-api") {
-    throw new Error(`仅支持 New API 站点，收到：${input.siteType}`)
-  }
+  assertNewApiSite(input.siteType)
 
   if (!input.baseUrl.trim()) throw new Error("站点地址不能为空")
   if (!input.accessToken.trim()) throw new Error("Access Token 不能为空")
@@ -212,8 +217,7 @@ export async function importCurrentTabAccount(): Promise<Account> {
 
 /** 刷新单个账号余额。 */
 export async function refreshAccount(id: string): Promise<Account | undefined> {
-  const accounts = await loadAccounts()
-  const account = accounts.find((a) => a.id === id)
+  const account = await getAccount(id)
   if (!account) return undefined
   try {
     const snapshot = await refreshNewApiAccount(
@@ -241,5 +245,3 @@ export async function refreshAccount(id: string): Promise<Account | undefined> {
     return patched
   }
 }
-
-export { loadAccounts, removeAccount, patchAccount, saveAccounts }

@@ -140,14 +140,21 @@ export async function fetchUserSelfInTab(origin: string, userId?: string) {
   }
 }
 
-export async function createAccessTokenInTab(origin: string, userId?: string): Promise<string> {
+/** 共用核心：cookie 会话或 JWT 换一把真 PAT。authHeader 空串 = 纯 cookie 模式。 */
+async function createTokenInTab(
+  origin: string,
+  authHeader: string,
+  userId: string | undefined,
+  nullResultMessage: string,
+): Promise<string> {
   const tab = await getActiveHttpTab()
   const [{ result } = { result: undefined }] = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     world: "MAIN",
-    args: [origin, userId ?? ""],
-    func: async (baseUrl: string, id: string) => {
+    args: [origin, authHeader, userId ?? ""],
+    func: async (baseUrl: string, auth: string, id: string) => {
       const headers: Record<string, string> = { "Content-Type": "application/json" }
+      if (auth) headers["Authorization"] = auth
       if (id) headers["New-API-User"] = id
       const res = await fetch(`${baseUrl.replace(/\/+$/, "")}/api/user/token`, {
         method: "GET",
@@ -166,11 +173,15 @@ export async function createAccessTokenInTab(origin: string, userId?: string): P
       }
     },
   })
-  if (!result) throw new Error("无法在当前标签创建 Access Token")
+  if (!result) throw new Error(nullResultMessage)
   if (!result.ok || !result.token.trim()) {
     throw new Error(result.message || "站点没有返回 Access Token")
   }
   return result.token.trim()
+}
+
+export async function createAccessTokenInTab(origin: string, userId?: string): Promise<string> {
+  return createTokenInTab(origin, "", userId, "无法在当前标签创建 Access Token")
 }
 
 /** 用 JWT 当 Authorization 调 /api/user/token 生成真 PAT（跨域能用）。 */
@@ -179,37 +190,5 @@ export async function createAccessTokenInTabWithJwt(
   jwt: string,
   userId?: string,
 ): Promise<string> {
-  const tab = await getActiveHttpTab()
-  const [{ result } = { result: undefined }] = await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    world: "MAIN",
-    args: [origin, jwt, userId ?? ""],
-    func: async (baseUrl: string, token: string, id: string) => {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      }
-      if (id) headers["New-API-User"] = id
-      const res = await fetch(`${baseUrl.replace(/\/+$/, "")}/api/user/token`, {
-        method: "GET",
-        headers,
-        credentials: "include",
-        cache: "no-store",
-      })
-      const body = (await res.json().catch(() => null)) as Record<string, unknown> | null
-      const data = body && "data" in body ? body.data : body
-      return {
-        ok: res.ok,
-        status: res.status,
-        message:
-          body && typeof body.message === "string" ? body.message : res.statusText,
-        token: typeof data === "string" ? data : "",
-      }
-    },
-  })
-  if (!result) throw new Error("无法用 JWT 创建 Access Token")
-  if (!result.ok || !result.token.trim()) {
-    throw new Error(result.message || "站点没有返回 Access Token")
-  }
-  return result.token.trim()
+  return createTokenInTab(origin, `Bearer ${jwt}`, userId, "无法用 JWT 创建 Access Token")
 }

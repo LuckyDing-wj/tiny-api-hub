@@ -6,6 +6,7 @@
 import { siteFetch } from "~/services/siteFetch"
 
 const QUOTA_PER_USD = 500000
+export { QUOTA_PER_USD }
 
 export interface NewApiUserSelf {
   id?: number | string
@@ -62,7 +63,8 @@ export interface NewApiUserGroup {
   description?: string
 }
 
-function buildHeaders(accessToken: string, userId?: string): Record<string, string> {
+// 以下请求原语供协议族各客户端（models/verify 等）复用，勿在本文件外重写。
+export function buildHeaders(accessToken: string, userId?: string): Record<string, string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "New-API-User": userId ?? "",
@@ -71,7 +73,7 @@ function buildHeaders(accessToken: string, userId?: string): Record<string, stri
   return headers
 }
 
-function joinUrl(baseUrl: string, path: string): string {
+export function joinUrl(baseUrl: string, path: string): string {
   const origin = baseUrl.replace(/\/+$/, "")
   const suffix = path.startsWith("/") ? path : `/${path}`
   return `${origin}${suffix}`
@@ -88,7 +90,7 @@ export class NewApiError extends Error {
   }
 }
 
-async function decodeError(res: Response): Promise<never> {
+export async function decodeError(res: Response): Promise<never> {
   let message = res.statusText || `HTTP ${res.status}`
   let code: string | number | undefined
   try {
@@ -110,7 +112,7 @@ async function decodeError(res: Response): Promise<never> {
   throw new NewApiError(message, res.status, code)
 }
 
-function unwrap<T>(body: unknown): T {
+export function unwrap<T>(body: unknown): T {
   if (body && typeof body === "object" && "data" in body) {
     return (body as Record<string, unknown>).data as T
   }

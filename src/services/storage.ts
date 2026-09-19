@@ -18,6 +18,20 @@ export async function getAccount(id: string): Promise<Account | undefined> {
   return accounts.find((a) => a.id === id)
 }
 
+/** 取账号，不存在直接抛错。业务层（keys/models/checkin 等）共用。 */
+export async function requireAccount(id: string): Promise<Account> {
+  const account = await getAccount(id)
+  if (!account) throw new Error("账号不存在")
+  return account
+}
+
+/** 本仓阶段 1 只认 New API 协议站点。 */
+export function assertNewApiSite(siteType: string): void {
+  if (siteType !== "new-api") {
+    throw new Error(`仅支持 New API 站点，收到：${siteType}`)
+  }
+}
+
 export async function upsertAccount(account: Account): Promise<void> {
   const accounts = await loadAccounts()
   const idx = accounts.findIndex((a) => a.id === account.id)

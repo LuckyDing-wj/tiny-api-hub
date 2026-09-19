@@ -90,21 +90,21 @@ function parentDir(targetUrl: string): string {
 }
 
 async function mkcol(dirUrl: string, username: string, password: string): Promise<void> {
+  const okStatus = (s: number) =>
+    s === 201 || s === 405 || (s >= 200 && s < 300)
   const tryOnce = (url: string) =>
     fetch(url, {
       method: "MKCOL",
       headers: { Authorization: authHeader(username, password) },
     })
   const res = await tryOnce(dirUrl)
-  if (res.status === 201 || res.status === 405 || (res.status >= 200 && res.status < 300)) {
-    return
-  }
+  if (okStatus(res.status)) return
   if (!dirUrl.endsWith("/")) {
     const res2 = await tryOnce(`${dirUrl}/`)
-    if (res2.status === 201 || res2.status === 405 || (res2.status >= 200 && res2.status < 300)) {
-      return
-    }
+    if (okStatus(res2.status)) return
+    throw new WebdavError(`创建备份目录失败 HTTP ${res2.status}`, res2.status)
   }
+  throw new WebdavError(`创建备份目录失败 HTTP ${res.status}`, res.status)
 }
 
 async function putText(

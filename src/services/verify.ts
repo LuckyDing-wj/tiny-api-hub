@@ -1,4 +1,7 @@
 // API 验证。轻量版：原生 fetch 探测 /v1/models + 文本生成。
+// 注意：探测目标是 OpenAI Compatible 端点（/v1/*），不走 New API 协议层。
+
+import { joinUrl } from "~/services/newApi"
 
 export const PROBE_IDS = {
   Models: "models",
@@ -27,12 +30,6 @@ export interface VerifyInput {
   baseUrl: string
   apiKey: string
   modelId?: string
-}
-
-function joinUrl(baseUrl: string, path: string): string {
-  const origin = baseUrl.replace(/\/+$/, "")
-  const suffix = path.startsWith("/") ? path : `/${path}`
-  return `${origin}${suffix}`
 }
 
 function nowMs(): number {

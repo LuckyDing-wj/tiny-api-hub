@@ -1,4 +1,4 @@
-import { loadAccounts } from "~/services/storage"
+import { assertNewApiSite, requireAccount } from "~/services/storage"
 import {
   createToken,
   deleteToken,
@@ -10,25 +10,11 @@ import {
   type NewApiTokenInput,
   type NewApiUserGroup,
 } from "~/services/newApi"
-import type { Account } from "~/types"
-
-function assertNewApi(account: Account): void {
-  if (account.siteType !== "new-api") {
-    throw new Error(`仅支持 New API 站点，收到：${account.siteType}`)
-  }
-}
-
-async function getAccount(id: string): Promise<Account> {
-  const accounts = await loadAccounts()
-  const account = accounts.find((a) => a.id === id)
-  if (!account) throw new Error("账号不存在")
-  return account
-}
 
 /** 列出账号下所有 Token。 */
 export async function listTokens(accountId: string): Promise<NewApiToken[]> {
-  const account = await getAccount(accountId)
-  assertNewApi(account)
+  const account = await requireAccount(accountId)
+  assertNewApiSite(account.siteType)
   return fetchTokens(account.baseUrl, account.accessToken, account.userId)
 }
 
@@ -37,8 +23,8 @@ export async function createKey(
   accountId: string,
   input: NewApiTokenInput,
 ): Promise<NewApiToken> {
-  const account = await getAccount(accountId)
-  assertNewApi(account)
+  const account = await requireAccount(accountId)
+  assertNewApiSite(account.siteType)
   return createToken(account.baseUrl, account.accessToken, account.userId, input)
 }
 
@@ -47,8 +33,8 @@ export async function updateKey(
   accountId: string,
   input: NewApiTokenInput & { id: number },
 ): Promise<void> {
-  const account = await getAccount(accountId)
-  assertNewApi(account)
+  const account = await requireAccount(accountId)
+  assertNewApiSite(account.siteType)
   await updateToken(account.baseUrl, account.accessToken, account.userId, input)
 }
 
@@ -57,8 +43,8 @@ export async function deleteKey(
   accountId: string,
   tokenId: number,
 ): Promise<void> {
-  const account = await getAccount(accountId)
-  assertNewApi(account)
+  const account = await requireAccount(accountId)
+  assertNewApiSite(account.siteType)
   await deleteToken(account.baseUrl, account.accessToken, account.userId, tokenId)
 }
 
@@ -69,8 +55,8 @@ export async function copyKey(key: string): Promise<void> {
 
 /** 取 Token 真 key（列表里是掩码的）。 */
 export async function revealKey(accountId: string, tokenId: number): Promise<string> {
-  const account = await getAccount(accountId)
-  assertNewApi(account)
+  const account = await requireAccount(accountId)
+  assertNewApiSite(account.siteType)
   return fetchTokenSecretKey(account.baseUrl, account.accessToken, account.userId, tokenId)
 }
 
@@ -88,8 +74,8 @@ export async function revealAndCopyKey(
 export async function listGroups(
   accountId: string,
 ): Promise<Record<string, NewApiUserGroup>> {
-  const account = await getAccount(accountId)
-  assertNewApi(account)
+  const account = await requireAccount(accountId)
+  assertNewApiSite(account.siteType)
   return fetchUserGroups(account.baseUrl, account.accessToken, account.userId)
 }
 
@@ -99,8 +85,8 @@ export async function updateKeyGroup(
   tokenId: number,
   patch: { group?: string; model_limits_enabled?: boolean; model_limits?: string },
 ): Promise<void> {
-  const account = await getAccount(accountId)
-  assertNewApi(account)
+  const account = await requireAccount(accountId)
+  assertNewApiSite(account.siteType)
   // PUT 要带完整 tokenData，先读原 token 再覆盖。
   const tokens = await fetchTokens(account.baseUrl, account.accessToken, account.userId)
   const existing = tokens.find((t) => t.id === tokenId)

@@ -12,6 +12,7 @@ import {
   updateKeyGroup,
 } from "~/services/keys"
 import { listGroupModels } from "~/services/models"
+import { QUOTA_PER_USD, quotaToBalance } from "~/services/newApi"
 import type { Account } from "~/types"
 import type { NewApiToken, NewApiTokenInput, NewApiUserGroup } from "~/services/newApi"
 
@@ -24,9 +25,9 @@ interface Props {
 
 function formatQuota(token: NewApiToken): string {
   if (token.unlimited_quota) return "无限"
-  const remain = token.remain_quota ?? 0
-  const used = token.used_quota ?? 0
-  return `${(remain / 500000).toFixed(2)} / 用 ${(used / 500000).toFixed(2)}`
+  const remain = quotaToBalance(token.remain_quota ?? 0)
+  const used = quotaToBalance(token.used_quota ?? 0)
+  return `${remain.toFixed(2)} / 用 ${used.toFixed(2)}`
 }
 
 function formatExpiry(ts: number): string {
@@ -369,7 +370,7 @@ function CreateTokenForm({
     try {
       const remainQuota = unlimited
         ? 0
-        : Math.max(0, Math.floor(Number(quota) * 500000))
+        : Math.max(0, Math.floor(Number(quota) * QUOTA_PER_USD))
       await onCreate({
         name: name.trim() || "Tiny API Hub",
         remain_quota: remainQuota,

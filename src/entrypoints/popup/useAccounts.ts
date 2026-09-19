@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 
-import { loadAccounts, refreshAccount } from "~/services/accounts"
+import { loadAccounts } from "~/services/storage"
+import { refreshAccount } from "~/services/accounts"
 import type { Account } from "~/types"
 
 export function useAccounts() {

@@ -1,6 +1,5 @@
-import { loadAccounts } from "~/services/storage"
+import { assertNewApiSite, loadAccounts, requireAccount } from "~/services/storage"
 import { checkIn, fetchCheckInStatus, NewApiError } from "~/services/newApi"
-import type { Account } from "~/types"
 
 const CHECKIN_RESULT_KEY = "tiny_api_hub_checkin_results_v1"
 
@@ -13,19 +12,10 @@ export interface CheckInResult {
   timestamp: number
 }
 
-async function getAccount(id: string): Promise<Account> {
-  const accounts = await loadAccounts()
-  const account = accounts.find((a) => a.id === id)
-  if (!account) throw new Error("账号不存在")
-  return account
-}
-
 /** 单账号签到。 */
 export async function checkInAccount(accountId: string): Promise<CheckInResult> {
-  const account = await getAccount(accountId)
-  if (account.siteType !== "new-api") {
-    throw new Error(`仅支持 New API 站点，收到：${account.siteType}`)
-  }
+  const account = await requireAccount(accountId)
+  assertNewApiSite(account.siteType)
 
   const timestamp = Date.now()
 

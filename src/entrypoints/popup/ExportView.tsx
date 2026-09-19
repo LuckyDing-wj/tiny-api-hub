@@ -3,7 +3,7 @@ import { useState } from "react"
 
 import {
   CCSWITCH_APPS,
-  buildCCSwitchUrl,
+  openInCCSwitch,
   type CCSwitchApp,
 } from "~/services/export"
 
@@ -30,19 +30,13 @@ export default function ExportView({
   const handleCCSwitch = () => {
     setError(null)
     try {
-      const url = buildCCSwitchUrl({
+      const url = openInCCSwitch({
         name,
         baseUrl,
         apiKey,
         ccSwitchApp: ccApp,
       })
       setCcUrl(url)
-      const a = document.createElement("a")
-      a.href = url
-      a.rel = "noreferrer"
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     }
