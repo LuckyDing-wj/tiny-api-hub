@@ -15,12 +15,16 @@ interface Props {
 
 const ARMED_MS = 3000
 
+/** 武装态统一外观：工具类覆盖 .ta-btn-danger 的透明底。 */
+export const CONFIRM_ARMED_CLASS =
+  "bg-red-600 text-white border-red-600 hover:bg-red-600 dark:bg-red-600 dark:text-white dark:border-red-600 dark:hover:bg-red-600"
+
 /** 两态确认：点一下武装，再点执行；3 秒、失焦或 Esc 回弹。替代原生 confirm。 */
 export default function ConfirmButton({
   onConfirm,
   children,
-  confirmLabel = "确认？",
-  armedClassName = "",
+  confirmLabel = "确认删除？",
+  armedClassName = CONFIRM_ARMED_CLASS,
   className = "",
   title,
   disabled,
@@ -35,22 +39,27 @@ export default function ConfirmButton({
     [],
   )
 
+  const disarm = () => {
+    if (timer.current) clearTimeout(timer.current)
+    setArmed(false)
+  }
+
   return (
     <button
       type="button"
       className={`${className}${armed ? ` ${armedClassName}` : ""}`}
       disabled={disabled}
       title={title}
-      onBlur={() => setArmed(false)}
+      onBlur={disarm}
       onKeyDown={(e) => {
-        if (e.key === "Escape") setArmed(false)
+        if (e.key === "Escape") disarm()
       }}
       onClick={() => {
         if (armed) {
-          if (timer.current) clearTimeout(timer.current)
-          setArmed(false)
+          disarm()
           onConfirm()
         } else {
+          if (timer.current) clearTimeout(timer.current)
           setArmed(true)
           timer.current = setTimeout(() => setArmed(false), ARMED_MS)
         }

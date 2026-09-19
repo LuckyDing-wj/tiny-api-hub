@@ -1,7 +1,7 @@
 import { Activity, CheckCircle2, Download, KeyRound, Plus, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 
-import ConfirmButton from "./ConfirmButton"
+import ConfirmButton, { CONFIRM_ARMED_CLASS } from "./ConfirmButton"
 
 import {
   createCredential,
@@ -167,8 +167,7 @@ export default function CredentialView({ onChanged, onVerify, onExport }: Props)
                 </button>
                 <ConfirmButton
                   className="ta-btn ta-btn-danger"
-                  armedClassName="bg-red-600 text-white border-red-600 hover:bg-red-600 dark:bg-red-600 dark:text-white dark:border-red-600 dark:hover:bg-red-600"
-                  confirmLabel="确认"
+                  armedClassName={CONFIRM_ARMED_CLASS}
                   onConfirm={() => handleRemove(cred.id)}
                 >
                   <Trash2 size={14} />

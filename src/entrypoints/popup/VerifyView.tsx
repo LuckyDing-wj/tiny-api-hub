@@ -240,6 +240,7 @@ export default function VerifyView({ baseUrl, apiKey, title, onBack }: Props) {
                         void navigator.clipboard
                           .writeText(id)
                           .then(() => flashCopied("已复制"))
+                          .catch(() => flashCopied("复制失败"))
                       }
                       title="复制"
                     >
