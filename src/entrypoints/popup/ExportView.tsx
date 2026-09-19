@@ -51,7 +51,7 @@ export default function ExportView({
   }
 
   return (
-    <section className="flex w-[360px] flex-col gap-2.5 p-3">
+    <section className="ta-view flex w-[360px] flex-col gap-2.5 p-3">
       <header className="flex items-center gap-2">
         <button className="ta-btn ta-btn-icon" onClick={onBack} title="返回">
           ←

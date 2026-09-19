@@ -2,6 +2,7 @@ import { Cpu, KeyRound, RefreshCw, Search } from "lucide-react"
 import { useMemo, useState } from "react"
 
 import { removeAccount } from "~/services/storage"
+import { formatRelativeTime } from "~/lib/utils"
 import type { CheckInResult } from "~/services/checkin"
 import type { Account } from "~/types"
 
@@ -27,8 +28,7 @@ function formatBalance(account: Account): string {
 }
 
 function formatTime(ts: number | undefined): string {
-  if (!ts) return "—"
-  return new Date(ts).toLocaleString()
+  return formatRelativeTime(ts)
 }
 
 export default function AccountList({
@@ -127,7 +127,11 @@ export default function AccountList({
             </span>
           </div>
           <div className="flex items-center justify-between text-[10px] text-gray-500 dark:text-dark-text-tertiary">
-            <span>{formatTime(account.lastSyncTime)}</span>
+            <span
+              title={account.lastSyncTime ? new Date(account.lastSyncTime).toLocaleString() : undefined}
+            >
+              {formatTime(account.lastSyncTime)}
+            </span>
             <div className="flex items-center gap-2">
               {refreshProgress?.[account.id] === "running" && (
                 <span className="flex items-center gap-0.5 text-blue-500">

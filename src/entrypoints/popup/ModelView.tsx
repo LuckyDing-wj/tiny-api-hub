@@ -44,7 +44,7 @@ export default function ModelView({ account, onBack }: Props) {
     : models
 
   return (
-    <section className="flex w-[360px] flex-col gap-2.5 p-3">
+    <section className="ta-view flex w-[360px] flex-col gap-2.5 p-3">
       <header className="flex items-center gap-2">
         <button className="ta-btn ta-btn-icon" onClick={onBack} title="返回">
           ←
@@ -71,9 +71,11 @@ export default function ModelView({ account, onBack }: Props) {
       )}
 
       {loading ? (
-        <p className="py-4 text-center text-xs text-gray-500 dark:text-dark-text-tertiary">
-          加载中...
-        </p>
+        <div className="flex flex-col gap-1.5">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="ta-skeleton h-11" />
+          ))}
+        </div>
       ) : filtered.length === 0 ? (
         <p className="py-6 text-center text-xs text-gray-500 dark:text-dark-text-tertiary">
           无模型{filter ? "匹配筛选" : "，该账号未返回模型列表"}。

@@ -137,7 +137,7 @@ export default function VerifyView({ baseUrl, apiKey, title, onBack }: Props) {
   const failCount = batch.filter((r) => r.result?.status === "fail").length
 
   return (
-    <section className="flex h-[560px] w-[360px] flex-col gap-2.5 overflow-hidden p-3">
+    <section className="ta-view flex h-[560px] w-[360px] flex-col gap-2.5 overflow-hidden p-3">
       <header className="flex items-center gap-2">
         <button className="ta-btn ta-btn-icon" onClick={onBack} title="返回">
           ←

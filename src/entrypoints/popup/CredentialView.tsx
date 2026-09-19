@@ -1,4 +1,4 @@
-import { Activity, CheckCircle2, Download, KeyRound, Plus, Trash2 } from "lucide-react"
+import { Activity, CheckCircle2, Database, Download, Plus, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import ConfirmButton, { CONFIRM_ARMED_CLASS } from "./ConfirmButton"
@@ -63,7 +63,7 @@ export default function CredentialView({ onChanged, onVerify, onExport }: Props)
     <section className="flex flex-col gap-2.5">
       <header className="flex items-center justify-between gap-2">
         <h2 className="flex items-center gap-1 text-sm font-semibold">
-          <KeyRound size={14} /> 凭据库
+          <Database size={14} /> 凭据库
         </h2>
         <button
           className="ta-btn ta-btn-primary"

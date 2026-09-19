@@ -65,7 +65,24 @@ export default function ConfirmButton({
         }
       }}
     >
-      {armed ? confirmLabel : children}
+      {/*
+        宽度稳定：两态内容同格叠放，按钮宽度始终取最大态，
+        武装时文字变长不挤压行内相邻按钮
+      */}
+      <span className="grid place-items-center">
+        <span
+          className="col-start-1 row-start-1"
+          style={{ visibility: armed ? "hidden" : "visible" }}
+        >
+          {children}
+        </span>
+        <span
+          className="col-start-1 row-start-1"
+          style={{ visibility: armed ? "visible" : "hidden" }}
+        >
+          {armed ? confirmLabel : children}
+        </span>
+      </span>
     </button>
   )
 }

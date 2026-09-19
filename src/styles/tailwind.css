@@ -22,6 +22,28 @@
     @apply bg-white text-gray-900 dark:bg-dark-bg-primary dark:text-dark-text-primary;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
+  /* 暗色滚动条（标准属性 + webkit 兜底） */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db transparent;
+  }
+  .dark * {
+    scrollbar-color: #334155 transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: #d1d5db;
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background: #334155;
+  }
 }
 
 @layer components {
@@ -45,6 +67,34 @@
   }
   .ta-label {
     @apply flex flex-col gap-1 text-[11px] text-gray-500 dark:text-dark-text-tertiary;
+  }
+  .ta-skeleton {
+    @apply animate-pulse rounded-md bg-gray-200 dark:bg-dark-bg-tertiary;
+  }
+  /* 视图切换淡入：挂在各视图根元素，挂载即播 */
+  .ta-view {
+    animation: ta-view-in 0.12s ease-out;
+  }
+}
+
+@keyframes ta-view-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ta-view,
+  .ta-skeleton {
+    animation: none;
+  }
+  .spin {
+    animation-duration: 2s;
   }
 }
 

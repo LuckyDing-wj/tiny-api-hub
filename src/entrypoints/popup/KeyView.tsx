@@ -124,7 +124,7 @@ export default function KeyView({ account, onBack, onVerify, onExport }: Props) 
   const options = groupOptions(groups)
 
   return (
-    <section className="flex h-[560px] w-[360px] flex-col gap-2.5 overflow-hidden p-3">
+    <section className="ta-view flex h-[560px] w-[360px] flex-col gap-2.5 overflow-hidden p-3">
       <header className="flex items-center gap-2">
         <button className="ta-btn ta-btn-icon" onClick={onBack} title="返回">
           ←
@@ -210,9 +210,11 @@ export default function KeyView({ account, onBack, onVerify, onExport }: Props) 
       )}
 
       {loading ? (
-        <p className="py-4 text-center text-xs text-gray-500 dark:text-dark-text-tertiary">
-          加载中...
-        </p>
+        <div className="flex flex-col gap-1.5">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="ta-skeleton h-16" />
+          ))}
+        </div>
       ) : tokens.length === 0 ? (
         <p className="py-6 text-center text-xs text-gray-500 dark:text-dark-text-tertiary">
           还没有 Token，点「新建」创建。

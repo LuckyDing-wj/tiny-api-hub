@@ -1,6 +1,7 @@
 import {
   Archive,
   CalendarCheck,
+  Database,
   Download,
   ExternalLink,
   KeyRound,
@@ -36,7 +37,7 @@ type View =
 
 const NAV_ITEMS: { id: Nav; label: string; icon: typeof KeyRound }[] = [
   { id: "accounts", label: "账号", icon: KeyRound },
-  { id: "credentials", label: "凭据", icon: KeyRound },
+  { id: "credentials", label: "凭据", icon: Database },
   { id: "backup", label: "备份", icon: Archive },
 ]
 
@@ -255,7 +256,8 @@ export default function App() {
 
       {/* 内容区 */}
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden px-3 pb-2">
-        {nav === "accounts" ? (
+        <div key={nav} className="ta-view flex min-h-0 flex-col gap-2">
+          {nav === "accounts" ? (
           <>
             {importError && (
               <p className="text-[11px] text-red-500 dark:text-red-400">{importError}</p>
@@ -270,9 +272,11 @@ export default function App() {
               />
             )}
             {loading ? (
-              <p className="py-4 text-center text-xs text-gray-500 dark:text-dark-text-tertiary">
-                加载中...
-              </p>
+              <div className="flex flex-col gap-1.5">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="ta-skeleton h-16" />
+                ))}
+              </div>
             ) : (
               <AccountList
                 accounts={accounts}
@@ -303,6 +307,7 @@ export default function App() {
             onImported={() => void reloading()}
           />
         ) : null}
+        </div>
       </div>
 
       {/* 底栏导航 */}
