@@ -6,11 +6,11 @@ import {
   type ModelPricing,
   type PerCallPrice,
 } from "~/services/pricingModel"
+import { QUOTA_PER_USD } from "~/services/newApi"
 
-const NEW_API_QUOTA_PER_USD = 500_000
 const TOKEN_PRICE_UNIT_TOKENS = 1_000_000
 const NEW_API_RATIO_BASE_USD_PER_MILLION_TOKENS =
-  TOKEN_PRICE_UNIT_TOKENS / NEW_API_QUOTA_PER_USD // = 2
+  TOKEN_PRICE_UNIT_TOKENS / QUOTA_PER_USD // = 2
 
 export interface TokenPricesUSD {
   input: number
@@ -80,18 +80,14 @@ const calculateRatioTokenPriceUSD = (
   return { input, output }
 }
 
-// DoneHub 按次计费的 token→call 折算
-const DONE_HUB_TOKEN_TO_CALL_RATIO = 0.002
-
+// Done Hub 专用折算已随站点类型一起砍掉：{input,output} 对象形态是 Done Hub 的
+// payload，标准 New API 的 model_price 是数字（USD/次）。对象形态按不支持处理。
 const calculateModelPerCallPrice = (
   cost: PerCallPrice,
   factor: number,
-): PerCallPrice => {
+): number | undefined => {
   if (typeof cost === "number") return cost * factor
-  return {
-    input: cost.input * factor * DONE_HUB_TOKEN_TO_CALL_RATIO,
-    output: cost.output * factor * DONE_HUB_TOKEN_TO_CALL_RATIO,
-  }
+  return undefined
 }
 
 /** 计算模型价格。groupMultiplier 来自 group_ratio.default。 */
@@ -132,12 +128,16 @@ export function calculateModelPrice(
     }
   }
 
+  const perCallUSD = calculateModelPerCallPrice(
+    model.model_price,
+    effectiveGroupMultiplier,
+  )
+  if (perCallUSD === undefined) {
+    return { kind: "unavailable", billingMode: "per-call" }
+  }
   return {
     kind: "per-call",
-    usdPerCall: calculateModelPerCallPrice(
-      model.model_price,
-      effectiveGroupMultiplier,
-    ),
+    usdPerCall: perCallUSD,
   }
 }
 

@@ -1,11 +1,16 @@
-import { loadAccounts } from "~/services/storage"
-import { NewApiError } from "~/services/newApi"
+import { loadAccounts, requireAccount, assertNewApiSite } from "~/services/storage"
+import {
+  buildHeaders,
+  decodeError,
+  joinUrl,
+  unwrap,
+} from "~/services/newApi"
+import { siteFetch } from "~/services/siteFetch"
 import {
   calculateModelPrice,
   resolveDisplayPrice,
 } from "~/services/modelPricing"
 import {
-  isTokenBillingType,
   type ModelPricing,
   type PricingResponse,
 } from "~/services/pricingModel"
@@ -34,58 +39,14 @@ export interface AccountModels {
   models: ModelInfo[]
 }
 
-async function getAccount(id: string): Promise<Account> {
-  const accounts = await loadAccounts()
-  const account = accounts.find((a) => a.id === id)
-  if (!account) throw new Error("账号不存在")
-  return account
-}
-
-function buildHeaders(accessToken: string, userId?: string): HeadersInit {
-  return {
-    "Content-Type": "application/json",
-    "New-API-User": userId ?? "",
-    Authorization: `Bearer ${accessToken}`,
-  }
-}
-
-function joinUrl(baseUrl: string, path: string): string {
-  const origin = baseUrl.replace(/\/+$/, "")
-  const suffix = path.startsWith("/") ? path : `/${path}`
-  return `${origin}${suffix}`
-}
-
-async function decodeError(res: Response): Promise<never> {
-  let message = res.statusText || `HTTP ${res.status}`
-  let code: string | number | undefined
-  try {
-    const body = (await res.json()) as Record<string, unknown>
-    if (typeof body.message === "string") message = body.message
-    if (typeof body.code === "number") code = body.code
-    else if (typeof body.code === "string" && body.code) code = body.code
-  } catch {
-    // 非 JSON
-  }
-  throw new NewApiError(message, res.status, code)
-}
-
-function unwrap<T>(body: unknown): T {
-  if (body && typeof body === "object" && "data" in body) {
-    return (body as Record<string, unknown>).data as T
-  }
-  return body as T
-}
-
 /** GET /api/user/models — 账号可用模型名列表。 */
 async function fetchUserModels(
   account: Account,
   signal?: AbortSignal,
 ): Promise<string[]> {
-  const res = await fetch(joinUrl(account.baseUrl, "/api/user/models"), {
+  const res = await siteFetch(joinUrl(account.baseUrl, "/api/user/models"), {
     method: "GET",
     headers: buildHeaders(account.accessToken, account.userId),
-    credentials: "omit",
-    cache: "no-store",
     signal,
   })
   if (!res.ok) await decodeError(res)
@@ -107,11 +68,9 @@ export async function fetchPricing(
   signal?: AbortSignal,
 ): Promise<PricingResponse | null> {
   try {
-    const res = await fetch(joinUrl(account.baseUrl, "/api/pricing"), {
+    const res = await siteFetch(joinUrl(account.baseUrl, "/api/pricing"), {
       method: "GET",
       headers: buildHeaders(account.accessToken, account.userId),
-      credentials: "omit",
-      cache: "no-store",
       signal,
     })
     if (!res.ok) await decodeError(res)
@@ -149,10 +108,8 @@ function resolveGroupMultiplier(groupRatio: unknown): number {
 export async function getAccountModels(
   accountId: string,
 ): Promise<AccountModels> {
-  const account = await getAccount(accountId)
-  if (account.siteType !== "new-api") {
-    throw new Error(`仅支持 New API 站点，收到：${account.siteType}`)
-  }
+  const account = await requireAccount(accountId)
+  assertNewApiSite(account.siteType)
 
   const [names, pricing] = await Promise.all([
     fetchUserModels(account),
@@ -247,10 +204,8 @@ export async function listGroupModels(
   accountId: string,
   groupName: string,
 ): Promise<string[]> {
-  const account = await getAccount(accountId)
-  if (account.siteType !== "new-api") {
-    throw new Error(`仅支持 New API 站点，收到：${account.siteType}`)
-  }
+  const account = await requireAccount(accountId)
+  assertNewApiSite(account.siteType)
   const pricing = await fetchPricing(account)
   if (!pricing?.data) return []
   return pricing.data
@@ -258,5 +213,3 @@ export async function listGroupModels(
     .map((m) => m.model_name)
     .filter(Boolean)
 }
-
-export { isTokenBillingType }

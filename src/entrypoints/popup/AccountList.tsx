@@ -1,7 +1,7 @@
 import { Cpu, KeyRound, RefreshCw, Search } from "lucide-react"
 import { useMemo, useState } from "react"
 
-import { removeAccount } from "~/services/accounts"
+import { removeAccount } from "~/services/storage"
 import type { CheckInResult } from "~/services/checkin"
 import type { Account } from "~/types"
 
@@ -100,7 +100,7 @@ export default function AccountList({
         </p>
       ) : (
     <ul className="flex flex-col gap-1.5">
-      {sorted.map((account) => (
+      {filtered.map((account) => (
         <li
           key={account.id}
           className={`ta-card flex flex-col gap-1 ${account.disabled ? "opacity-60" : ""}`}

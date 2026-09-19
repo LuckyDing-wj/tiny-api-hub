@@ -93,7 +93,7 @@ export default function ModelView({ account, onBack }: Props) {
               <div className="flex justify-between text-[10px] text-gray-500 dark:text-dark-text-tertiary">
                 <span>
                   出 {formatPrice(model.outputPrice)}
-                  {model.cacheRead != null && ` · 缓存 ${model.cacheRead}x`}
+                  {model.cacheRead != null && ` · 缓存 ${formatPrice(model.cacheRead)}`}
                 </span>
                 <span>{model.billingMode ?? model.vendor ?? ""}</span>
               </div>
