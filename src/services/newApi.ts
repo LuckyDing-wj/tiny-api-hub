@@ -1,6 +1,9 @@
 // New API family 协议客户端（新写，对照旧仓 /api/user/self 行为）。
 // 参考：旧仓 src/services/apiService/newApiFamily/default/accountData.ts 只读对齐。
 // 不拷旧仓文件。
+// 所有站点请求走 siteFetch：直连被 CF 盾拦时自动改走临时页过盾。
+
+import { siteFetch } from "~/services/siteFetch"
 
 const QUOTA_PER_USD = 500000
 
@@ -59,7 +62,7 @@ export interface NewApiUserGroup {
   description?: string
 }
 
-function buildHeaders(accessToken: string, userId?: string): HeadersInit {
+function buildHeaders(accessToken: string, userId?: string): Record<string, string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "New-API-User": userId ?? "",
@@ -121,11 +124,9 @@ export async function fetchUserSelf(
   userId?: string,
   signal?: AbortSignal,
 ): Promise<NewApiUserSelf> {
-  const res = await fetch(joinUrl(baseUrl, "/api/user/self"), {
+  const res = await siteFetch(joinUrl(baseUrl, "/api/user/self"), {
     method: "GET",
     headers: buildHeaders(accessToken, userId),
-    credentials: "omit",
-    cache: "no-store",
     signal,
   })
   if (!res.ok) await decodeError(res)
@@ -144,11 +145,9 @@ export async function fetchSiteStatus(
   signal?: AbortSignal,
 ): Promise<{ system_name?: string } | null> {
   try {
-    const res = await fetch(joinUrl(baseUrl, "/api/status"), {
+    const res = await siteFetch(joinUrl(baseUrl, "/api/status"), {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-      credentials: "omit",
-      cache: "no-store",
       signal,
     })
     if (!res.ok) return null
@@ -200,11 +199,9 @@ export async function fetchUserGroups(
   userId?: string,
   signal?: AbortSignal,
 ): Promise<Record<string, NewApiUserGroup>> {
-  const res = await fetch(joinUrl(baseUrl, "/api/user/self/groups"), {
+  const res = await siteFetch(joinUrl(baseUrl, "/api/user/self/groups"), {
     method: "GET",
     headers: buildHeaders(accessToken, userId),
-    credentials: "omit",
-    cache: "no-store",
     signal,
   })
   if (!res.ok) await decodeError(res)
@@ -219,11 +216,9 @@ export async function fetchSiteGroups(
   userId?: string,
   signal?: AbortSignal,
 ): Promise<string[]> {
-  const res = await fetch(joinUrl(baseUrl, "/api/group"), {
+  const res = await siteFetch(joinUrl(baseUrl, "/api/group"), {
     method: "GET",
     headers: buildHeaders(accessToken, userId),
-    credentials: "omit",
-    cache: "no-store",
     signal,
   })
   if (!res.ok) await decodeError(res)
@@ -248,11 +243,9 @@ export async function fetchTokens(
       p: String(page),
       size: String(pageSize),
     })
-    const res = await fetch(joinUrl(baseUrl, `/api/token/?${params.toString()}`), {
+    const res = await siteFetch(joinUrl(baseUrl, `/api/token/?${params.toString()}`), {
       method: "GET",
       headers: buildHeaders(accessToken, userId),
-      credentials: "omit",
-      cache: "no-store",
       signal,
     })
     if (!res.ok) await decodeError(res)
@@ -283,11 +276,9 @@ export async function createToken(
   input: NewApiTokenInput,
   signal?: AbortSignal,
 ): Promise<NewApiToken> {
-  const res = await fetch(joinUrl(baseUrl, "/api/token/"), {
+  const res = await siteFetch(joinUrl(baseUrl, "/api/token/"), {
     method: "POST",
     headers: buildHeaders(accessToken, userId),
-    credentials: "omit",
-    cache: "no-store",
     body: JSON.stringify(input),
     signal,
   })
@@ -304,11 +295,9 @@ export async function updateToken(
   input: NewApiTokenInput & { id: number },
   signal?: AbortSignal,
 ): Promise<void> {
-  const res = await fetch(joinUrl(baseUrl, "/api/token/"), {
+  const res = await siteFetch(joinUrl(baseUrl, "/api/token/"), {
     method: "PUT",
     headers: buildHeaders(accessToken, userId),
-    credentials: "omit",
-    cache: "no-store",
     body: JSON.stringify(input),
     signal,
   })
@@ -323,11 +312,9 @@ export async function deleteToken(
   tokenId: number,
   signal?: AbortSignal,
 ): Promise<void> {
-  const res = await fetch(joinUrl(baseUrl, `/api/token/${tokenId}`), {
+  const res = await siteFetch(joinUrl(baseUrl, `/api/token/${tokenId}`), {
     method: "DELETE",
     headers: buildHeaders(accessToken, userId),
-    credentials: "omit",
-    cache: "no-store",
     signal,
   })
   if (!res.ok) await decodeError(res)
@@ -341,13 +328,11 @@ export async function fetchCheckInStatus(
   signal?: AbortSignal,
 ): Promise<{ enabled: boolean; checkedInToday: boolean } | null> {
   const month = new Date().toISOString().slice(0, 7)
-  const res = await fetch(
+  const res = await siteFetch(
     joinUrl(baseUrl, `/api/user/checkin?month=${month}`),
     {
       method: "GET",
       headers: buildHeaders(accessToken, userId),
-      credentials: "omit",
-      cache: "no-store",
       signal,
     },
   )
@@ -371,11 +356,9 @@ export async function checkIn(
   userId?: string,
   signal?: AbortSignal,
 ): Promise<{ success: boolean; message: string }> {
-  const res = await fetch(joinUrl(baseUrl, "/api/user/checkin"), {
+  const res = await siteFetch(joinUrl(baseUrl, "/api/user/checkin"), {
     method: "POST",
     headers: buildHeaders(accessToken, userId),
-    credentials: "omit",
-    cache: "no-store",
     signal,
   })
   if (!res.ok) await decodeError(res)
@@ -396,11 +379,9 @@ export async function fetchTokenSecretKey(
   tokenId: number,
   signal?: AbortSignal,
 ): Promise<string> {
-  const res = await fetch(joinUrl(baseUrl, `/api/token/${tokenId}/key`), {
+  const res = await siteFetch(joinUrl(baseUrl, `/api/token/${tokenId}/key`), {
     method: "POST",
     headers: buildHeaders(accessToken, userId),
-    credentials: "omit",
-    cache: "no-store",
     signal,
   })
   if (!res.ok) await decodeError(res)
