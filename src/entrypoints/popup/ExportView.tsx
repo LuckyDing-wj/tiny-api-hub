@@ -7,6 +7,8 @@ import {
   type CCSwitchApp,
 } from "~/services/export"
 
+import { useFlash } from "./useFlash"
+
 interface Props {
   name: string
   baseUrl: string
@@ -23,7 +25,7 @@ export default function ExportView({
   onBack,
 }: Props) {
   const [ccApp, setCcApp] = useState<CCSwitchApp>("claude")
-  const [copied, setCopied] = useState(false)
+  const [copiedMsg, flashCopied] = useFlash()
   const [error, setError] = useState<string | null>(null)
   const [ccUrl, setCcUrl] = useState<string | null>(null)
 
@@ -45,8 +47,7 @@ export default function ExportView({
   const handleCopyCcUrl = async () => {
     if (!ccUrl) return
     await navigator.clipboard.writeText(ccUrl)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    flashCopied("已复制 ✓")
   }
 
   return (
@@ -90,7 +91,7 @@ export default function ExportView({
           </button>
           {ccUrl && (
             <button className="ta-btn" onClick={handleCopyCcUrl}>
-              {copied ? "已复制 ✓" : "复制链接"}
+              {copiedMsg ?? "复制链接"}
             </button>
           )}
         </div>

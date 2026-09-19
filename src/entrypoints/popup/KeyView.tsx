@@ -1,6 +1,8 @@
 import { Activity, Copy, Download, KeyRound, Plus, Tag } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import ConfirmButton from "./ConfirmButton"
+
 import {
   copyKey,
   createKey,
@@ -100,7 +102,6 @@ export default function KeyView({ account, onBack, onVerify, onExport }: Props) 
   }
 
   const handleDelete = async (tokenId: number) => {
-    if (!confirm("删除该 Token？")) return
     try {
       await deleteKey(account.id, tokenId)
       await reload()
@@ -328,12 +329,13 @@ export default function KeyView({ account, onBack, onVerify, onExport }: Props) 
                     >
                       {copiedId === token.id ? "✓" : <Copy size={14} />}
                     </button>
-                    <button
+                    <ConfirmButton
                       className="ta-btn ta-btn-danger"
-                      onClick={() => handleDelete(token.id)}
+                      armedClassName="bg-red-600 text-white border-red-600 hover:bg-red-600 dark:bg-red-600 dark:text-white dark:border-red-600 dark:hover:bg-red-600"
+                      onConfirm={() => handleDelete(token.id)}
                     >
                       删除
-                    </button>
+                    </ConfirmButton>
                   </div>
                 )}
               </li>

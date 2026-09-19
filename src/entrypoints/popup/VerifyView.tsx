@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { probeModels, probeTextGeneration } from "~/services/verify"
 import type { ProbeResult } from "~/services/verify"
 
+import { useFlash } from "./useFlash"
+
 interface Props {
   baseUrl: string
   apiKey: string
@@ -32,6 +34,7 @@ export default function VerifyView({ baseUrl, apiKey, title, onBack }: Props) {
   const [batch, setBatch] = useState<BatchRow[]>([])
   const [batchRunning, setBatchRunning] = useState(false)
   const [filter, setFilter] = useState("")
+  const [copiedMsg, flashCopied] = useFlash()
   const stopRef = useRef(false)
 
   const fetchModels = async () => {
@@ -142,6 +145,11 @@ export default function VerifyView({ baseUrl, apiKey, title, onBack }: Props) {
         <h2 className="flex flex-1 items-center gap-1 overflow-hidden text-sm font-semibold">
           <Activity size={14} />
           <span className="truncate">{title ?? "验证"}</span>
+          {copiedMsg && (
+            <span className="text-[10px] font-normal text-emerald-500">
+              {copiedMsg}
+            </span>
+          )}
         </h2>
         <button
           className="ta-btn ta-btn-icon"
@@ -228,7 +236,11 @@ export default function VerifyView({ baseUrl, apiKey, title, onBack }: Props) {
                     )}
                     <button
                       className="ta-btn ta-btn-icon"
-                      onClick={() => void navigator.clipboard.writeText(id)}
+                      onClick={() =>
+                        void navigator.clipboard
+                          .writeText(id)
+                          .then(() => flashCopied("已复制"))
+                      }
                       title="复制"
                     >
                       ⧉

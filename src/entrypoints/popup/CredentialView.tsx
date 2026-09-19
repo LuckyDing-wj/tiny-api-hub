@@ -1,6 +1,8 @@
 import { Activity, CheckCircle2, Download, KeyRound, Plus, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import ConfirmButton from "./ConfirmButton"
+
 import {
   createCredential,
   loadCredentials,
@@ -52,7 +54,6 @@ export default function CredentialView({ onChanged, onVerify, onExport }: Props)
   }
 
   const handleRemove = async (id: string) => {
-    if (!confirm("删除该凭据？")) return
     await removeCredential(id)
     await reload()
     onChanged()
@@ -164,12 +165,14 @@ export default function CredentialView({ onChanged, onVerify, onExport }: Props)
                     <CheckCircle2 size={14} />
                   )}
                 </button>
-                <button
+                <ConfirmButton
                   className="ta-btn ta-btn-danger"
-                  onClick={() => handleRemove(cred.id)}
+                  armedClassName="bg-red-600 text-white border-red-600 hover:bg-red-600 dark:bg-red-600 dark:text-white dark:border-red-600 dark:hover:bg-red-600"
+                  confirmLabel="确认"
+                  onConfirm={() => handleRemove(cred.id)}
                 >
                   <Trash2 size={14} />
-                </button>
+                </ConfirmButton>
               </div>
             </li>
           ))}
