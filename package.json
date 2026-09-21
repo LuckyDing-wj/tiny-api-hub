@@ -2,11 +2,11 @@
   "name": "tiny-api-hub",
   "private": true,
   "type": "module",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "中转账号 + API 凭据管家（精简新实现）",
   "engines": {
     "node": ">=20",
-    "pnpm": ">=9"
+    "pnpm": ">=10.26"
   },
   "scripts": {
     "dev": "wxt",

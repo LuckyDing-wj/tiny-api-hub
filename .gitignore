@@ -8,4 +8,5 @@ dist/
 .vscode/
 .omc/
 .scratch/
+.workbuddy/
 HANDOFF.md
