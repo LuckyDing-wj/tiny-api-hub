@@ -39,6 +39,13 @@ export default function AccountList({
   onOpenModels,
 }: Props) {
   const [query, setQuery] = useState("")
+  // 今天跑过签到（任意账号有当天记录）才显示「未签到」占位，避免从没用过签到时满屏噪音
+  const hasTodayRun = useMemo(() => {
+    const today = new Date().toDateString()
+    return Object.values(checkinResults ?? {}).some(
+      (r) => new Date(r.timestamp).toDateString() === today,
+    )
+  }, [checkinResults])
   const sorted = useMemo(
     () =>
       [...accounts].sort((a, b) => {
@@ -136,8 +143,14 @@ export default function AccountList({
               )}
               {checkinProgress?.[account.id] ? (
                 <CheckinBadge state={checkinProgress[account.id]} />
-              ) : checkinResults?.[account.id] ? (
+              ) : checkinResults?.[account.id] &&
+                new Date(checkinResults[account.id].timestamp).toDateString() ===
+                  new Date().toDateString() ? (
                 <CheckinHistoryBadge result={checkinResults[account.id]} />
+              ) : !account.disabled && hasTodayRun ? (
+                <span className="text-gray-400 dark:text-dark-text-tertiary" title="今天还没签到">
+                  ○ 未签到
+                </span>
               ) : null}
             </div>
           </div>
@@ -191,17 +204,23 @@ export default function AccountList({
 }
 
 function CheckinHistoryBadge({ result }: { result: CheckInResult }) {
-  const isToday = new Date(result.timestamp).toDateString() === new Date().toDateString()
   if (result.success) {
     return (
       <span className="text-emerald-500 dark:text-emerald-400" title={result.message}>
-        ✓ {isToday ? "今日已签" : "曾签到"}
+        ✓ 今日已签
+      </span>
+    )
+  }
+  if (result.message === "站点未启用签到") {
+    return (
+      <span className="text-gray-400 dark:text-dark-text-tertiary" title={result.message}>
+        ○ 未启用签到
       </span>
     )
   }
   return (
     <span className="text-red-500 dark:text-red-400" title={result.message}>
-      ✕ {isToday ? "今日失败" : "上次失败"}
+      ✕ {result.message?.slice(0, 30) || "失败"}
     </span>
   )
 }

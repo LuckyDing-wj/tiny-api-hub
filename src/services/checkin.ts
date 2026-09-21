@@ -100,13 +100,14 @@ export async function checkInAll(
     const result = await checkInAccount(account.id)
     results.push(result)
     onProgress?.(account.id, "done", result)
+    // 逐条落盘：popup 中途被关，已完成的记录不丢
+    await saveCheckInResults([result])
     if (shouldStop?.()) break
     // 串行间隔，防限流
     if (enabled.indexOf(account) < enabled.length - 1) {
       await new Promise((resolve) => setTimeout(resolve, 1000))
     }
   }
-  await saveCheckInResults(results)
   return results
 }
 
@@ -121,9 +122,16 @@ export async function loadCheckInResults(): Promise<Record<string, CheckInResult
 }
 
 async function saveCheckInResults(results: CheckInResult[]): Promise<void> {
+  const today = new Date().toDateString()
   const existing = await loadCheckInResults()
   for (const r of results) {
     existing[r.accountId] = r
   }
-  await chrome.storage.local.set({ [CHECKIN_RESULT_KEY]: existing })
+  // 只保留当天记录，跨天旧数据不污染展示
+  const todayOnly = Object.fromEntries(
+    Object.entries(existing).filter(
+      ([, r]) => new Date(r.timestamp).toDateString() === today,
+    ),
+  )
+  await chrome.storage.local.set({ [CHECKIN_RESULT_KEY]: todayOnly })
 }
