@@ -12,7 +12,7 @@ export default defineConfig({
     name: "Tiny API Hub",
     description: "中转账号 + API 凭据管家",
     // alarms/activeTab 已删：定时同步与通知确认不做，activeTab 被 <all_urls> 覆盖
-    permissions: ["storage", "tabs", "scripting"],
+    permissions: ["storage", "tabs", "scripting", "sidePanel"],
     host_permissions: ["<all_urls>"],
   },
 })

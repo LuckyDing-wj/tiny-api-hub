@@ -42,7 +42,7 @@ const NAV_ITEMS: { id: Nav; label: string; icon: typeof KeyRound }[] = [
   { id: "backup", label: "备份", icon: Archive },
 ]
 
-export default function App() {
+export default function App({ layout = "popup" }: { layout?: "popup" | "sidepanel" }) {
   const { accounts, loading, reloading, refreshOne, refreshingId } = useAccounts()
   const [view, setView] = useState<View>({ kind: "main", nav: "accounts", adding: false })
   const [importingTab, setImportingTab] = useState(false)
@@ -190,7 +190,13 @@ export default function App() {
   const checkinActive = checkinRunning !== null || Object.keys(checkinProgress).length > 0
 
   return (
-    <main className="flex h-[560px] w-[360px] flex-col overflow-hidden">
+    <main
+      className={
+        layout === "sidepanel"
+          ? "flex h-screen w-full flex-col overflow-hidden"
+          : "flex h-[560px] w-[360px] flex-col overflow-hidden"
+      }
+    >
       {/* 标题栏 */}
       <header className="flex items-center justify-between gap-2 px-3 pt-3 pb-2">
         <h1 className="text-sm font-semibold">Tiny API Hub</h1>
