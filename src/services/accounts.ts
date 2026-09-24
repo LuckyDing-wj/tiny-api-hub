@@ -73,6 +73,11 @@ function sameOrigin(left: string, right: string): boolean {
   }
 }
 
+/** 找同源已存在账号（添加前去重提示用）。 */
+export async function findSameOriginAccount(baseUrl: string): Promise<Account | undefined> {
+  return (await loadAccounts()).find((account) => sameOrigin(account.baseUrl, baseUrl))
+}
+
 /** 当前标签页已登录的 New API 账号导入。失败明确报错，不兜底。 */
 export async function importCurrentTabAccount(): Promise<Account> {
   const session = await readCurrentTabSession()
@@ -98,8 +103,9 @@ export async function importCurrentTabAccount(): Promise<Account> {
       const user = await fetchUserSelfInTab(session.origin, userId)
       userId = user.id != null ? String(user.id) : userId
       accessToken = typeof user.access_token === "string" ? user.access_token.trim() : ""
-    } catch {
+    } catch (err) {
       // 旧版接口无权，继续往下试
+      console.warn("[tiny-api-hub] /api/user/self 回退失败", err)
     }
   }
 
@@ -108,15 +114,17 @@ export async function importCurrentTabAccount(): Promise<Account> {
   if (!accessToken && sessionJwt) {
     try {
       accessToken = await createAccessTokenInTabWithJwt(session.origin, sessionJwt, userId)
-    } catch {
+    } catch (err) {
       // JWT 生成失败，回退到 cookie
+      console.warn("[tiny-api-hub] JWT 生成 PAT 失败", err)
     }
   }
   if (!accessToken) {
     try {
       accessToken = await createAccessTokenInTab(session.origin, userId)
-    } catch {
+    } catch (err) {
       // cookie 生成也失败
+      console.warn("[tiny-api-hub] cookie 生成 PAT 失败", err)
     }
   }
   if (!accessToken) {

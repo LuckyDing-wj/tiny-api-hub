@@ -9,10 +9,9 @@ import {
   RefreshCw,
   Square,
 } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useState } from "react"
 
 import { importCurrentTabAccount } from "~/services/accounts"
-import { checkInAll, loadCheckInResults, type CheckInResult } from "~/services/checkin"
 import { loadAccounts } from "~/services/storage"
 import type { Account } from "~/types"
 
@@ -24,8 +23,11 @@ import CredentialView from "./CredentialView"
 import ExportView from "./ExportView"
 import KeyView from "./KeyView"
 import ModelView from "./ModelView"
+import Toast from "./Toast"
 import VerifyView from "./VerifyView"
 import { useAccounts } from "./useAccounts"
+import { useCheckin } from "./useCheckin"
+import { useRefreshAll } from "./useRefreshAll"
 
 type Nav = "accounts" | "credentials" | "backup"
 
@@ -47,37 +49,24 @@ export default function App({ layout = "popup" }: { layout?: "popup" | "sidepane
   const [view, setView] = useState<View>({ kind: "main", nav: "accounts", adding: false })
   const [importingTab, setImportingTab] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
-  const [refreshingAll, setRefreshingAll] = useState(false)
-  const [refreshProgress, setRefreshProgress] = useState<Record<string, "running" | "done">>({})
-  const [checkinResults, setCheckinResults] = useState<Record<string, CheckInResult>>({})
-  const [checkinRunning, setCheckinRunning] = useState<string | null>(null)
-  const [checkinProgress, setCheckinProgress] = useState<Record<string, { status: "running" | "done"; result?: CheckInResult }>>({})
-  const stopRef = useRef(false)
+  const [toast, setToast] = useState<string | null>(null)
+  const dismissToast = useCallback(() => setToast(null), [])
 
-  useEffect(() => {
-    void loadCheckInResults().then(setCheckinResults)
-  }, [])
+  const {
+    checkinResults,
+    checkinProgress,
+    checkinActive,
+    checkinAll,
+    stopCheckin,
+    openFailedSites,
+  } = useCheckin()
+  const { refreshingAll, refreshProgress, refreshAll, stopRefreshAll } = useRefreshAll(
+    refreshOne,
+    reloading,
+  )
 
   const backToMain = (nav: Nav = "accounts") =>
     setView({ kind: "main", nav, adding: false })
-
-  const handleRefreshAll = async () => {
-    setRefreshingAll(true)
-    setRefreshProgress({})
-    try {
-      const all = await loadAccounts()
-      const enabled = all.filter((a) => !a.disabled)
-      for (const account of enabled) {
-        setRefreshProgress((prev) => ({ ...prev, [account.id]: "running" }))
-        await refreshOne(account.id)
-        setRefreshProgress((prev) => ({ ...prev, [account.id]: "done" }))
-      }
-      await reloading()
-    } finally {
-      setRefreshingAll(false)
-      setTimeout(() => setRefreshProgress({}), 2000)
-    }
-  }
 
   const handleImportCurrentTab = async () => {
     setImportError(null)
@@ -93,49 +82,18 @@ export default function App({ layout = "popup" }: { layout?: "popup" | "sidepane
   }
 
   const handleCheckinAll = async () => {
-    stopRef.current = false
-    setCheckinProgress({})
-    setCheckinRunning("start")
     try {
-      await checkInAll(
-        (accountId, status, result) => {
-          setCheckinProgress((prev) => ({
-            ...prev,
-            [accountId]: { status, result },
-          }))
-          setCheckinRunning(status === "running" ? accountId : null)
-        },
-        () => stopRef.current,
-      )
-      const results = await loadCheckInResults()
-      setCheckinResults(results)
+      await checkinAll()
     } finally {
-      setCheckinRunning(null)
+      // 与原实现一致：签到抛错也重载账号列表
       await reloading()
     }
   }
 
-  const handleStopCheckin = () => {
-    stopRef.current = true
-  }
-
   const handleOpenFailedSites = async () => {
-    const results = await loadCheckInResults()
-    const all = await loadAccounts()
-    const today = new Date().toDateString()
-    const failed = all.filter((a) => {
-      const r = results[a.id]
-      return (
-        r &&
-        !r.success &&
-        new Date(r.timestamp).toDateString() === today
-      )
-    })
-    for (const account of failed) {
-      void chrome.tabs.create({ url: account.baseUrl })
-    }
-    if (failed.length === 0) {
-      alert("今天没有签到失败的站点")
+    const count = await openFailedSites()
+    if (count === 0) {
+      setToast("今天没有签到失败的站点")
     }
   }
 
@@ -187,7 +145,6 @@ export default function App({ layout = "popup" }: { layout?: "popup" | "sidepane
   // 主视图（底栏导航）
   const nav = view.nav
   const adding = view.adding
-  const checkinActive = checkinRunning !== null || Object.keys(checkinProgress).length > 0
 
   return (
     <main
@@ -197,6 +154,8 @@ export default function App({ layout = "popup" }: { layout?: "popup" | "sidepane
           : "flex h-[560px] w-[360px] flex-col overflow-hidden"
       }
     >
+      {toast && <Toast message={toast} onDone={dismissToast} />}
+
       {/* 标题栏 */}
       <header className="flex items-center justify-between gap-2 px-3 pt-3 pb-2">
         <h1 className="text-sm font-semibold">Tiny API Hub</h1>
@@ -215,7 +174,7 @@ export default function App({ layout = "popup" }: { layout?: "popup" | "sidepane
             checkinActive ? (
               <button
                 className="ta-btn ta-btn-icon"
-                onClick={handleStopCheckin}
+                onClick={stopCheckin}
                 title="停止签到"
               >
                 <Square size={14} />
@@ -240,14 +199,23 @@ export default function App({ layout = "popup" }: { layout?: "popup" | "sidepane
             </button>
           )}
           {(nav === "accounts" || nav === "credentials") && (
-            <button
-              className="ta-btn ta-btn-icon"
-              onClick={() => void handleRefreshAll()}
-              disabled={refreshingAll}
-              title="刷新全部"
-            >
-              <RefreshCw size={15} className={refreshingAll ? "spin" : ""} />
-            </button>
+            refreshingAll ? (
+              <button
+                className="ta-btn ta-btn-icon"
+                onClick={stopRefreshAll}
+                title="停止刷新"
+              >
+                <Square size={14} />
+              </button>
+            ) : (
+              <button
+                className="ta-btn ta-btn-icon"
+                onClick={() => void refreshAll()}
+                title="刷新全部"
+              >
+                <RefreshCw size={15} className={refreshingAll ? "spin" : ""} />
+              </button>
+            )
           )}
           {(nav === "accounts" || nav === "credentials") && (
             <button
