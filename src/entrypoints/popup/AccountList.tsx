@@ -1,8 +1,11 @@
 import { Cpu, KeyRound, RefreshCw, Search } from "lucide-react"
 import { useMemo, useState } from "react"
 
+import ConfirmButton, { CONFIRM_ARMED_CLASS } from "./ConfirmButton"
+
 import { removeAccount } from "~/services/storage"
 import { formatRelativeTime } from "~/lib/utils"
+import { showToast } from "~/lib/toast"
 import type { CheckInResult } from "~/services/checkin"
 import type { Account } from "~/types"
 
@@ -185,15 +188,18 @@ export default function AccountList({
                 className={refreshingId === account.id ? "spin" : ""}
               />
             </button>
-            <button
+            <ConfirmButton
               className="ta-btn ta-btn-danger"
-              onClick={async () => {
+              armedClassName={CONFIRM_ARMED_CLASS}
+              title="删除账号（再点一次确认）"
+              onConfirm={async () => {
                 await removeAccount(account.id)
                 onChanged()
+                showToast(`已删除「${account.name}」`)
               }}
             >
               删除
-            </button>
+            </ConfirmButton>
           </div>
         </li>
       ))}

@@ -9,10 +9,11 @@ import {
   RefreshCw,
   Square,
 } from "lucide-react"
-import { useCallback, useState } from "react"
+import { useState } from "react"
 
 import { importCurrentTabAccount } from "~/services/accounts"
 import { loadAccounts } from "~/services/storage"
+import { showToast } from "~/lib/toast"
 import type { Account } from "~/types"
 
 import AccountList from "./AccountList"
@@ -23,7 +24,7 @@ import CredentialView from "./CredentialView"
 import ExportView from "./ExportView"
 import KeyView from "./KeyView"
 import ModelView from "./ModelView"
-import Toast from "./Toast"
+import ToastHost from "./ToastHost"
 import VerifyView from "./VerifyView"
 import { useAccounts } from "./useAccounts"
 import { useCheckin } from "./useCheckin"
@@ -35,8 +36,8 @@ type View =
   | { kind: "main"; nav: Nav; adding: boolean }
   | { kind: "keys"; account: Account }
   | { kind: "models"; account: Account }
-  | { kind: "verify"; baseUrl: string; apiKey: string; title: string }
-  | { kind: "export"; name: string; baseUrl: string; apiKey: string; title: string }
+  | { kind: "verify"; from: Nav; baseUrl: string; apiKey: string; title: string }
+  | { kind: "export"; from: Nav; name: string; baseUrl: string; apiKey: string; title: string }
 
 const NAV_ITEMS: { id: Nav; label: string; icon: typeof KeyRound }[] = [
   { id: "accounts", label: "账号", icon: KeyRound },
@@ -49,8 +50,6 @@ export default function App({ layout = "popup" }: { layout?: "popup" | "sidepane
   const [view, setView] = useState<View>({ kind: "main", nav: "accounts", adding: false })
   const [importingTab, setImportingTab] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
-  const [toast, setToast] = useState<string | null>(null)
-  const dismissToast = useCallback(() => setToast(null), [])
 
   const {
     checkinResults,
@@ -93,52 +92,59 @@ export default function App({ layout = "popup" }: { layout?: "popup" | "sidepane
   const handleOpenFailedSites = async () => {
     const count = await openFailedSites()
     if (count === 0) {
-      setToast("今天没有签到失败的站点")
+      showToast("今天没有签到失败的站点")
     }
   }
 
-  // 全屏子视图
+  // 全屏子视图：不套 main 布局，但保留 ToastHost（子视图内复制等操作要弹提示）
+  const withToast = (node: React.ReactNode) => (
+    <>
+      {node}
+      <ToastHost />
+    </>
+  )
+
   if (view.kind === "keys") {
-    return (
+    return withToast(
       <KeyView
         account={view.account}
         onBack={() => backToMain("accounts")}
         onVerify={(baseUrl, apiKey, title) =>
-          setView({ kind: "verify", baseUrl, apiKey, title })
+          setView({ kind: "verify", from: "accounts", baseUrl, apiKey, title })
         }
         onExport={(name, baseUrl, apiKey, title) =>
-          setView({ kind: "export", name, baseUrl, apiKey, title })
+          setView({ kind: "export", from: "accounts", name, baseUrl, apiKey, title })
         }
-      />
+      />,
     )
   }
   if (view.kind === "models") {
-    return (
+    return withToast(
       <ModelView
         account={view.account}
         onBack={() => backToMain("accounts")}
-      />
+      />,
     )
   }
   if (view.kind === "export") {
-    return (
+    return withToast(
       <ExportView
         name={view.name}
         baseUrl={view.baseUrl}
         apiKey={view.apiKey}
         title={view.title}
-        onBack={() => backToMain("accounts")}
-      />
+        onBack={() => backToMain(view.from)}
+      />,
     )
   }
   if (view.kind === "verify") {
-    return (
+    return withToast(
       <VerifyView
         baseUrl={view.baseUrl}
         apiKey={view.apiKey}
         title={view.title}
-        onBack={() => backToMain("accounts")}
-      />
+        onBack={() => backToMain(view.from)}
+      />,
     )
   }
 
@@ -154,7 +160,7 @@ export default function App({ layout = "popup" }: { layout?: "popup" | "sidepane
           : "flex h-[560px] w-[360px] flex-col overflow-hidden"
       }
     >
-      {toast && <Toast message={toast} onDone={dismissToast} />}
+      <ToastHost />
 
       {/* 标题栏 */}
       <header className="flex items-center justify-between gap-2 px-3 pt-3 pb-2">
@@ -266,10 +272,10 @@ export default function App({ layout = "popup" }: { layout?: "popup" | "sidepane
             <CredentialView
               onChanged={reloading}
               onVerify={(baseUrl, apiKey, title) =>
-                setView({ kind: "verify", baseUrl, apiKey, title })
+                setView({ kind: "verify", from: "credentials", baseUrl, apiKey, title })
               }
               onExport={(name, baseUrl, apiKey, title) =>
-                setView({ kind: "export", name, baseUrl, apiKey, title })
+                setView({ kind: "export", from: "credentials", name, baseUrl, apiKey, title })
               }
             />
           ) : nav === "backup" ? (

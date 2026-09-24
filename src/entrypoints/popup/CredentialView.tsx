@@ -1,4 +1,4 @@
-import { Activity, CheckCircle2, Database, Download, Plus, Trash2 } from "lucide-react"
+import { Activity, CheckCircle2, Copy, Database, Download, Plus, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import ConfirmButton, { CONFIRM_ARMED_CLASS } from "./ConfirmButton"
@@ -9,6 +9,8 @@ import {
   removeCredential,
   verifyCredential,
 } from "~/services/credentials"
+import { copyKey } from "~/services/keys"
+import { showToast } from "~/lib/toast"
 import type { Credential } from "~/services/credentials"
 
 interface Props {
@@ -27,6 +29,7 @@ export default function CredentialView({ onChanged, onVerify, onExport }: Props)
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
   const [verifyingId, setVerifyingId] = useState<string | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const reload = async () => {
@@ -57,6 +60,17 @@ export default function CredentialView({ onChanged, onVerify, onExport }: Props)
     await removeCredential(id)
     await reload()
     onChanged()
+  }
+
+  const handleCopy = async (cred: Credential) => {
+    try {
+      await copyKey(cred.apiKey)
+      setCopiedId(cred.id)
+      showToast("已复制 API Key")
+      setTimeout(() => setCopiedId((current) => (current === cred.id ? null : current)), 1500)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    }
   }
 
   return (
@@ -135,6 +149,13 @@ export default function CredentialView({ onChanged, onVerify, onExport }: Props)
                 <span>{formatTime(cred.lastVerifiedTime)}</span>
               </div>
               <div className="flex justify-end gap-1">
+                <button
+                  className="ta-btn ta-btn-icon"
+                  onClick={() => void handleCopy(cred)}
+                  title="复制 API Key"
+                >
+                  {copiedId === cred.id ? <span className="text-[10px] text-emerald-500">✓</span> : <Copy size={14} />}
+                </button>
                 <button
                   className="ta-btn ta-btn-icon"
                   onClick={() =>

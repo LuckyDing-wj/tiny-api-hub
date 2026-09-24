@@ -16,6 +16,7 @@ import {
 } from "~/services/keys"
 import { listGroupModels } from "~/services/models"
 import { QUOTA_PER_USD, quotaToBalance } from "~/services/newApi"
+import { showToast } from "~/lib/toast"
 import type { Account } from "~/types"
 import type { NewApiToken, NewApiTokenInput, NewApiUserGroup } from "~/services/newApi"
 
@@ -94,6 +95,7 @@ export default function KeyView({ account, onBack, onVerify, onExport }: Props) 
     try {
       await revealAndCopyKey(account.id, token.id)
       setCopiedId(token.id)
+      showToast("已复制真 Key")
       setTimeout(() => setCopiedId(null), 1500)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -206,7 +208,12 @@ export default function KeyView({ account, onBack, onVerify, onExport }: Props) 
             setViewingGroup(null)
             setGroupModels([])
           }}
-          onView={(modelName) => void navigator.clipboard.writeText(modelName)}
+          onView={(modelName) =>
+            void navigator.clipboard
+              .writeText(modelName)
+              .then(() => showToast("已复制模型名"))
+              .catch(() => showToast("复制失败"))
+          }
         />
       )}
 
@@ -232,7 +239,11 @@ export default function KeyView({ account, onBack, onVerify, onExport }: Props) 
                 </div>
                 <code
                   className="break-all rounded bg-gray-100 px-1.5 py-1 font-mono text-[10px] text-gray-500 dark:bg-dark-bg-primary dark:text-dark-text-tertiary"
-                  onClick={() => void copyKey(token.key)}
+                  onClick={() =>
+                    void copyKey(token.key)
+                      .then(() => showToast("已复制掩码 Key"))
+                      .catch(() => showToast("复制失败"))
+                  }
                   title="点击复制掩码 key"
                 >
                   {token.key}
